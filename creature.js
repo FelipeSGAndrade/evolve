@@ -22,6 +22,8 @@
 
         this.addChild(body)
         this.cursor = "pointer"
+
+        body.on("click", () => alert("creature energy: " + this.energy))
     }
 
     window.Creature = createjs.promote(Creature, "Container")

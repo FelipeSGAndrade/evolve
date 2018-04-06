@@ -1,30 +1,19 @@
 "use strict"
 
 const CreateMapManager = function() {
-    let mapHeight = 0
-    let mapWidth = 0
+    let mapHeight = 100
+    let mapWidth = 100
     const playerStart = [2, 0]
-    const map = [
-        [0, 0, 0, 0, 0],
-        [1, 0, 0, 0, 1],
-        [0, 0, 1, 0, 0],
-        [1, 0, 0, 0, 1],
-        [1, 1, 0, 1, 1],
-        [0, 0, 0, 0, 0],
-        [0, 0, 0, 0, 0],
-        [0, 0, 1, 0, 0],
-        [0, 1, 1, 1, 0],
-        [0, 0, 1, 0, 0],
-        [0, 0, 0, 0, 0],
-        [0, 1, 1, 1, 1],
-        [0, 0, 0, 0, 1],
-        [1, 1, 1, 0, 1],
-        [0, 0, 0, 0, 1],
-        [0, 1, 1, 1, 1]
-    ]
+    const map = []
 
-    mapHeight = map.length
-    mapWidth = map[0].length
+    for (let i = 0; i < mapHeight; i++) {
+        const row = []
+        for (let j = 0; j < mapWidth; j++) {
+            row.push(MathHelper.randomInt(0, 100))
+        }
+
+        map.push(row)
+    }
 
     function draw(game, size) {
         for (let i = 0; i < map.length; i++) {
