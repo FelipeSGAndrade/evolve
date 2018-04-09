@@ -23,7 +23,7 @@
         this.addChild(body)
         this.cursor = "pointer"
 
-        body.on("click", () => alert("creature energy: " + this.energy))
+        body.on("click", () => alert(`creature energy: ${this.energy}\nx: ${this.x} y: ${this.y}\nmapInfo: ${JSON.stringify(getMapPosition(this.x, this.y))}`))
     }
 
     window.Creature = createjs.promote(Creature, "Container")

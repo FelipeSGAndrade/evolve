@@ -12,6 +12,7 @@ let drawTreshould = 50
 let drawCount = drawTreshould
 let screenMargin = 20
 let margin = 10
+let map = null
 
 function update() {
     let updated = false
@@ -77,46 +78,48 @@ function initialize() {
     stage.width = 1000
     stage.height = 1000
 
-    const map = new createjs.Container()
-    map.width = stage.width
-    map.height = stage.height
-    stage.addChild(map)
+    const gameRegion = new createjs.Container()
+    gameRegion.width = stage.width
+    gameRegion.height = stage.height
+    stage.addChild(gameRegion)
 
-    const dragable = new createjs.Shape()
-    dragable.graphics
-        .setStrokeStyle(2)
-        .beginStroke("Black")
-        .beginFill("White")
-        .drawRect(0, 0, map.width, map.height)
-    map.addChild(dragable)
+    const mapOptions = {
+        mapWidth: 20,
+        mapHeight: 20,
+        regionWidth: gameRegion.width,
+        regionHeight: gameRegion.height
+    }
+
+    map = new Map(mapOptions)
+    gameRegion.addChild(map)
     
-    dragable.on("mousedown", function(event) {
-        dragable.dragLastX = event.stageX
-        dragable.dragLastY = event.stageY
+    map.on("mousedown", function(event) {
+        map.dragLastX = event.stageX
+        map.dragLastY = event.stageY
     })
 
-    dragable.on("pressmove", function(event) {
-        let minX = - (map.width - stage.canvas.width)
+    map.on("pressmove", function(event) {
+        let minX = - (gameRegion.width - stage.canvas.width)
         if (minX > 0) minX = 0
         const maxX = 0
-        let minY = - (map.height - stage.canvas.height)
+        let minY = - (gameRegion.height - stage.canvas.height)
         if (minY > 0) minY = 0
         const maxY = 0
 
-        map.x = MathHelper.clamp(map.x + event.stageX - dragable.dragLastX, minX, maxX)
-        map.y = MathHelper.clamp(map.y + event.stageY - dragable.dragLastY, minY, maxY)
+        gameRegion.x = MathHelper.clamp(gameRegion.x + event.stageX - map.dragLastX, minX, maxX)
+        gameRegion.y = MathHelper.clamp(gameRegion.y + event.stageY - map.dragLastY, minY, maxY)
 
-        dragable.dragLastX = event.stageX
-        dragable.dragLastY = event.stageY
+        map.dragLastX = event.stageX
+        map.dragLastY = event.stageY
     })
 
-    generateCreatures(map, 10)
+    generateCreatures(gameRegion, 10)
 
     createjs.Ticker.on("tick", handleUpdate)
 }
 
-function handleUpdate() {
-    stage.update()
+function handleUpdate(event) {
+    stage.update(event)
 }
 
 function generateCreatures(parent, qtd) {
@@ -127,6 +130,14 @@ function generateCreatures(parent, qtd) {
         const creature = new Creature({color, x, y})
         parent.addChild(creature)
     }
+}
+
+function getMapPosition(x, y) {
+    return map.getMapPosition(x, y)
+}
+
+function eatFood(x, y, ammount) {
+    return map.eatTileFood(x, y, ammount)
 }
 
 const colors = [
