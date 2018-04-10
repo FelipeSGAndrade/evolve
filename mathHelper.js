@@ -21,5 +21,19 @@ const MathHelper = {
     },
     random: (min, max) => {
         return (Math.random() * (max - min)) + min
+    },
+    forward: (angle) => {
+        const radians = angle * (Math.PI / 180);
+        return {
+            x: Math.cos(radians),
+            y: Math.sin(radians)
+        }
+    },
+    backward: (angle) => {
+        const radians = angle * (Math.PI / 180);
+        return {
+            x: Math.cos(radians) * -1,
+            y: Math.sin(radians) * -1
+        }
     }
 }

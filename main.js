@@ -13,6 +13,7 @@ let drawCount = drawTreshould
 let screenMargin = 20
 let margin = 10
 let map = null
+let baseFPS = 20
 
 function update() {
     let updated = false
@@ -119,7 +120,8 @@ function initialize() {
 }
 
 function handleUpdate(event) {
-    stage.update(event)
+    const fps = createjs.Ticker.getMeasuredFPS()
+    stage.update(event, fps)
 }
 
 function generateCreatures(parent, qtd) {

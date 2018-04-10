@@ -8,6 +8,7 @@
         this.mapWidth = options.mapWidth || 10
         this.regionHeight = options.regionHeight || 100
         this.regionWidth = options.regionWidth || 100
+        this.fertility = 1
 
         console.log(options)
 
@@ -89,8 +90,8 @@
         this.tileCommands[y][x].style = `rgb(10, ${Math.floor(newFood)}, 10)`
     }
 
-    p.tick = function(event) {
-        const value = event.delta/1000 * 1
+    p.tick = function() {
+        const value = this.fertility/baseFPS
         for (let i = 0; i < this.mapHeight; i++) {
             for (let j = 0; j < this.mapWidth; j++) {
                 this.increaseFood(j, i, value)
