@@ -9,6 +9,8 @@
 
     function Creature(options) {
         this.Container_constructor()
+
+        options = options || {}
         this.color = options.color || "Black"
         this.energy = options.energy || 100
         this.x = options.x || 100
@@ -17,12 +19,12 @@
         this.chances = [MathHelper.randomIntInclusive(10, 100), MathHelper.randomIntInclusive(10, 100), MathHelper.randomIntInclusive(10, 100), MathHelper.randomIntInclusive(10, 100), MathHelper.randomIntInclusive(10, 100)]
         this.id = uniqueId++
 
-        this.setup()
+        this.setup(options.flatWeights)
     }
 
     const p = createjs.extend(Creature, createjs.Container)
 
-    p.setup = function() {
+    p.setup = function(flatWeights) {
         const body = new createjs.Shape()
         this.bodyCommand = body.graphics
             .setStrokeStyle(2)
@@ -43,8 +45,9 @@
         this.addChild(head)
         this.cursor = "pointer"
 
-        body.on("click", () => console.log(`creature energy: ${this.energy}\nx: ${this.x} y: ${this.y}\nmapInfo: ${JSON.stringify(getMapPosition(this.x, this.y))}`))
+        this.neuralNetwork = CreateNeuralNetwork(flatWeights)
 
+        this.on("click", () => console.log(`creature energy: ${this.energy}\nx: ${this.x} y: ${this.y}\nmapInfo: ${JSON.stringify(getMapPosition(this.x, this.y))}`))
         this.on("tick", this.tick)
     }
 
@@ -54,7 +57,16 @@
             return
         }
 
-        this.processOutput(this.randomCommands(this.chances))
+        const inputs = this.getInputs()
+        const outputs = this.neuralNetwork.processInputs(inputs)
+        this.processOutput(outputs)
+    }
+
+    p.getInputs = function() {
+        return [
+            this.energy,
+            this.rotation
+        ]
     }
 
     p.consumeEnergy = function(value) {
@@ -82,7 +94,7 @@
         this.bodyCommand.radius = this.energy/5
         this.headCommand.x = this.energy/5
     }
-    
+
     p.eat = function() {
         const mapPosition = getMapPosition(this.x, this.y)
         const ammoutEaten = eatFood(mapPosition.mapX, mapPosition.mapY, 10)
@@ -109,11 +121,11 @@
             throw new Error('Invalid output length')
 
         let validCommand = false
-        if (outputs[0]) validCommand = this.turnRight()
-        if (outputs[1]) validCommand = this.turnLeft()
-        if (outputs[2]) validCommand = this.forward()
-        if (outputs[3]) validCommand = this.backward()
-        if (outputs[4]) validCommand = this.eat()
+        if (outputs[0] > 0) validCommand = this.turnRight()
+        if (outputs[1] > 0) validCommand = this.turnLeft()
+        if (outputs[2] > 0) validCommand = this.forward()
+        if (outputs[3] > 0) validCommand = this.backward()
+        if (outputs[4] > 0) validCommand = this.eat()
 
         return validCommand
     }

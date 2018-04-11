@@ -1,21 +1,19 @@
 "use strict"
 
-const CreateNeuralNetwork = function(flatNeuralNetworks) {
+const CreateNeuralNetwork = function(flatWeights) {
     let log = false
-    // let topology = [10, 10, 10, 8, 4]
-    // let activationFunctions = [null, MathHelper.sigmoid, MathHelper.sigmoid, MathHelper.sigmoid, MathHelper.boolean]
-    let baseTopology = [10, 10, 4]
+    let baseTopology = [2, 10, 5]
     let topology = baseTopology
-    let activationFunctions = [null, MathHelper.sigmoid, MathHelper.boolean]
+    let activationFunctions = [null, MathHelper.sigmoid, MathHelper.sigmoid]
     let weights = null
     let arestsCount = 0
     let fitness = 0
     const layers = []
 
-    if (flatNeuralNetworks) {
-        if (flatNeuralNetworks.topology) topology = flatNeuralNetworks.topology
-        if (flatNeuralNetworks.activationFunctions) activationFunctions = flatNeuralNetworks.activationFunctions
-        if (flatNeuralNetworks.weights) weights = flatNeuralNetworks.weights
+    if (flatWeights) {
+        if (flatWeights.topology) topology = flatWeights.topology
+        if (flatWeights.activationFunctions) activationFunctions = flatWeights.activationFunctions
+        if (flatWeights.weights) weights = flatWeights.weights
     }
 
     if(baseTopology[0] === topology[0]) {

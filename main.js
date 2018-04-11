@@ -93,7 +93,7 @@ function initialize() {
 
     map = new Map(mapOptions)
     gameRegion.addChild(map)
-    
+
     map.on("mousedown", function(event) {
         map.dragLastX = event.stageX
         map.dragLastY = event.stageY
@@ -114,14 +114,13 @@ function initialize() {
         map.dragLastY = event.stageY
     })
 
-    generateCreatures(gameRegion, 10)
+    generateCreatures(gameRegion, 100)
 
     createjs.Ticker.on("tick", handleUpdate)
 }
 
 function handleUpdate(event) {
-    const fps = createjs.Ticker.getMeasuredFPS()
-    stage.update(event, fps)
+    stage.update(event)
 }
 
 function generateCreatures(parent, qtd) {
