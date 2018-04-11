@@ -64,6 +64,8 @@
     }
 
     p.eatTileFood = function(x, y, ammount) {
+        if(this.map[y][x] < 2) return 0
+
         let newFood = Math.floor(this.map[y][x] - ammount)
         let ammountEaten = ammount
         if(newFood < 0) {

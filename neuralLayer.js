@@ -1,8 +1,7 @@
 "use strict"
 
-const CreateNeuralLayer = function(inputCount, nodeCount, activationFunction, flatWeights) {
+const CreateNeuralLayer = function({inputCount, nodeCount, activationFunction, flatWeights, log}) {
 
-    let log = false
     const weights = []
     for (let i = 0; i < nodeCount; i++) {
         if (flatWeights)
@@ -10,7 +9,7 @@ const CreateNeuralLayer = function(inputCount, nodeCount, activationFunction, fl
         else {
             weights.push([])
             for (let j = 0; j < inputCount; j++)
-                weights[i].push(MathHelper.random(-1, 1))
+                weights[i].push(MathHelper.randomInclusive(-1, 1))
         }
     }
 
@@ -29,6 +28,9 @@ const CreateNeuralLayer = function(inputCount, nodeCount, activationFunction, fl
                 }, 0)
             )
         }
+
+        if(log) console.log("sum0:",sum[0])
+        if(log) console.log("sum0 Sigmoid:", this.activationFunction(sum[0]))
 
         if (this.activationFunction) {
             return sum.map(this.activationFunction)

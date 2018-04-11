@@ -1,8 +1,7 @@
 "use strict"
 
-const CreateNeuralNetwork = function(flatWeights) {
-    let log = false
-    let baseTopology = [2, 10, 5]
+const CreateNeuralNetwork = function({flatWeights, log}) {
+    let baseTopology = [2, 4, 6]
     let topology = baseTopology
     let activationFunctions = [null, MathHelper.sigmoid, MathHelper.sigmoid]
     let weights = null
@@ -33,12 +32,13 @@ const CreateNeuralNetwork = function(flatWeights) {
 
         arestsCount += inputCount * nodeCount
 
-        layers.push(CreateNeuralLayer(inputCount, nodeCount, activationFunctions[index], layerWeights))
+        layers.push(CreateNeuralLayer({inputCount, nodeCount, activationFunction: activationFunctions[index], flatWeigths: layerWeights, log}))
     })
 
     if (log) console.log("arests count:", arestsCount)
 
     function processInputs(inputs) {
+        if (log) console.log("--- New process ---")
         if (!inputs.length || inputs.length !== topology[0] - 1) {
             throw new Error('invalid input length')
         }
@@ -50,7 +50,7 @@ const CreateNeuralNetwork = function(flatWeights) {
             processed = layer.processInputs(processed)
         })
 
-        if (log) console.log(processed)
+        if (log) console.log('output:', processed)
         return processed
     }
 

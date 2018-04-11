@@ -2,10 +2,13 @@
 
     const maxEnergy = 200
     const minEnergy = 20
-    const velocity = 10
     const turnVelocity = 20
-    const energyPerSecond = 5
+    const maxVelocity = 10
     let uniqueId = 0
+
+    const energyPerSecond = 5
+    const energyToEat = 5
+    const energyToMove = 1
 
     function Creature(options) {
         this.Container_constructor()
@@ -16,8 +19,9 @@
         this.x = options.x || 100
         this.y = options.y || 100
 
-        this.chances = [MathHelper.randomIntInclusive(10, 100), MathHelper.randomIntInclusive(10, 100), MathHelper.randomIntInclusive(10, 100), MathHelper.randomIntInclusive(10, 100), MathHelper.randomIntInclusive(10, 100)]
         this.id = uniqueId++
+        this.alive = true
+        this.velocity = 10
 
         this.setup(options.flatWeights)
     }
@@ -45,7 +49,8 @@
         this.addChild(head)
         this.cursor = "pointer"
 
-        this.neuralNetwork = CreateNeuralNetwork(flatWeights)
+        const log = (this.id === 1)
+        this.neuralNetwork = CreateNeuralNetwork({flatWeights, log})
 
         this.on("click", () => console.log(`creature energy: ${this.energy}\nx: ${this.x} y: ${this.y}\nmapInfo: ${JSON.stringify(getMapPosition(this.x, this.y))}`))
         this.on("tick", this.tick)
@@ -53,13 +58,13 @@
 
     p.tick = function() {
         const value = energyPerSecond/baseFPS
-        if(!this.consumeEnergy(value)) {
-            return
-        }
+        this.consumeEnergy(value)
 
         const inputs = this.getInputs()
         const outputs = this.neuralNetwork.processInputs(inputs)
         this.processOutput(outputs)
+
+        if (!this.alive) this.die()
     }
 
     p.getInputs = function() {
@@ -72,8 +77,7 @@
     p.consumeEnergy = function(value) {
         const newEnergy = this.energy - value
         if(newEnergy <= minEnergy) {
-            this.die()
-            return false
+            this.shouldDie()
         }
 
         this.setEnergy(newEnergy)
@@ -97,9 +101,16 @@
 
     p.eat = function() {
         const mapPosition = getMapPosition(this.x, this.y)
-        const ammoutEaten = eatFood(mapPosition.mapX, mapPosition.mapY, 10)
+        const ammountEaten = eatFood(mapPosition.mapX, mapPosition.mapY, 20)
 
-        this.increaseEnergy(ammoutEaten)
+        if (ammountEaten > 0) {
+            this.increaseEnergy(ammountEaten)
+            this.consumeEnergy(energyToEat)
+        }
+    }
+
+    p.shouldDie = function() {
+        this.alive = false
     }
 
     p.die = function() {
@@ -117,15 +128,16 @@
     }
 
     p.processOutput = function(outputs) {
-        if (outputs.length !== 5)
+        if (outputs.length !== 6)
             throw new Error('Invalid output length')
 
+        const velocityMultiplier = outputs[5]
         let validCommand = false
-        if (outputs[0] > 0) validCommand = this.turnRight()
-        if (outputs[1] > 0) validCommand = this.turnLeft()
-        if (outputs[2] > 0) validCommand = this.forward()
-        if (outputs[3] > 0) validCommand = this.backward()
-        if (outputs[4] > 0) validCommand = this.eat()
+        if (outputs[0] > 0.5) validCommand = this.turnRight()
+        if (outputs[1] > 0.5) validCommand = this.turnLeft()
+        if (outputs[2] > 0.5) validCommand = this.forward(velocityMultiplier)
+        if (outputs[3] > 0.5) validCommand = this.backward(velocityMultiplier)
+        if (outputs[4] > 0.5) validCommand = this.eat()
 
         return validCommand
     }
@@ -138,14 +150,16 @@
         this.rotation -= turnVelocity
     }
 
-    p.forward = function() {
+    p.forward = function(velocityMultiplier) {
         const forward = MathHelper.forward(this.rotation)
-        this.accelerate(forward, velocity)
+        this.consumeEnergy(velocityMultiplier * energyToMove)
+        this.accelerate(forward, maxVelocity * velocityMultiplier)
     }
 
-    p.backward = function() {
+    p.backward = function(velocityMultiplier) {
         const backward = MathHelper.backward(this.rotation)
-        this.accelerate(backward, velocity/2)
+        this.consumeEnergy(velocityMultiplier * energyToMove)
+        this.accelerate(backward, (maxVelocity * velocityMultiplier)/2)
     }
 
     p.accelerate = function(vector, vel) {
