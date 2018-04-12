@@ -1,6 +1,10 @@
 'use strict'
 
 let stage
+let context2D
+let map
+let gameRegion
+let baseFPS = 20
 
 let gameList = []
 let updateInterval
@@ -12,8 +16,6 @@ let drawTreshould = 50
 let drawCount = drawTreshould
 let screenMargin = 20
 let margin = 10
-let map = null
-let baseFPS = 20
 
 function update() {
     let updated = false
@@ -79,7 +81,9 @@ function initialize() {
     stage.width = 1000
     stage.height = 1000
 
-    const gameRegion = new createjs.Container()
+    context2D = stage.canvas.getContext('2d')
+
+    gameRegion = new createjs.Container()
     gameRegion.width = stage.width
     gameRegion.height = stage.height
     stage.addChild(gameRegion)
@@ -116,6 +120,7 @@ function initialize() {
 
     generateCreatures(gameRegion, 100)
 
+    createjs.Ticker.setFPS(baseFPS)
     createjs.Ticker.on("tick", handleUpdate)
 }
 
@@ -134,16 +139,22 @@ function generateCreatures(parent, qtd) {
 }
 
 function getMapPosition(x, y) {
-    return map.getMapPosition(x, y)
+    const clampedX = MathHelper.clamp(x, 1, gameRegion.width - 1)
+    const clampedY = MathHelper.clamp(y, 1, gameRegion.height - 1)
+    return map.getMapPosition(clampedX, clampedY)
 }
 
 function eatFood(x, y, ammount) {
     return map.eatTileFood(x, y, ammount)
 }
 
+function getRGBA(x, y) {
+    return context2D.getImageData(x, y, 1, 1).data
+}
+
 const colors = [
     "White",
-    "Red",
+    // "Red",
     "Blue",
     "Green",
     "Purple",

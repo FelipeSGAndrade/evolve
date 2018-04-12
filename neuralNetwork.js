@@ -1,7 +1,7 @@
 "use strict"
 
 const CreateNeuralNetwork = function({flatWeights, log}) {
-    let baseTopology = [2, 4, 6]
+    let baseTopology = [5, 10, 6]
     let topology = baseTopology
     let activationFunctions = [null, MathHelper.sigmoid, MathHelper.sigmoid]
     let weights = null

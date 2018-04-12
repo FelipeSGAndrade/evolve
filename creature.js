@@ -22,6 +22,7 @@
         this.id = uniqueId++
         this.alive = true
         this.velocity = 10
+        this.actionPointDistance = 10
 
         this.setup(options.flatWeights)
     }
@@ -29,6 +30,7 @@
     const p = createjs.extend(Creature, createjs.Container)
 
     p.setup = function(flatWeights) {
+        if(this.id === 1) this.color = "Red"
         const body = new createjs.Shape()
         this.bodyCommand = body.graphics
             .setStrokeStyle(2)
@@ -49,11 +51,32 @@
         this.addChild(head)
         this.cursor = "pointer"
 
-        const log = (this.id === 1)
+        const log = false
         this.neuralNetwork = CreateNeuralNetwork({flatWeights, log})
 
-        this.on("click", () => console.log(`creature energy: ${this.energy}\nx: ${this.x} y: ${this.y}\nmapInfo: ${JSON.stringify(getMapPosition(this.x, this.y))}`))
+        this.on("click", this.handleClick)
         this.on("tick", this.tick)
+    }
+
+    p.handleClick = function() {
+        const globalActionPoint = this.getActionPointCoordinates()
+        const mapInfo = JSON.stringify(getMapPosition(this.x, this.y))
+        const actionInfo = JSON.stringify(this.actionPointDistance)
+        const globalActionInfo = JSON.stringify(globalActionPoint)
+        const actionMapInfo = JSON.stringify(getMapPosition(globalActionPoint.x, globalActionPoint.y))
+        const vision = JSON.stringify(this.getVision())
+
+        let consoleText = 'creatureId: ' + this.id
+        consoleText += '\ncreature energy: ' + this.energy
+        consoleText += '\nrotation: ' + this.rotation
+        consoleText += `\nx: ${this.x} y: ${this.y}`
+        consoleText += '\naction: ' + actionInfo
+        consoleText += '\nglobalAction: ' + globalActionInfo
+        consoleText += '\nmapInfo: ' + mapInfo
+        consoleText += '\nactionMapInfo: ' + actionMapInfo
+        consoleText += '\nvision: ' + vision
+
+        console.log(consoleText)
     }
 
     p.tick = function() {
@@ -67,11 +90,39 @@
         if (!this.alive) this.die()
     }
 
+    p.getActionPointCoordinates = function () {
+        const forward = MathHelper.forward(this.rotation)
+        return {
+            x: this.x + forward.x * this.actionPointDistance,
+            y: this.y + forward.y * this.actionPointDistance
+        }
+    }
+
     p.getInputs = function() {
+        const vision = this.getVision()
+
         return [
             this.energy,
-            this.rotation
+            this.rotation,
+            vision.r,
+            vision.g,
+            vision.b
         ]
+    }
+
+    p.getVision = function() {
+        const pos = this.getActionPointCoordinates()
+        const colors = getRGBA(pos.x, pos.y)
+        if(this.id === 1) {
+            const objects = stage.getObjectsUnderPoint(pos.x, pos.y)
+            console.log(objects)
+        }
+
+        return {
+            r: colors[0],
+            g: colors[1],
+            b: colors[2]
+        }
     }
 
     p.consumeEnergy = function(value) {
@@ -97,10 +148,12 @@
         this.energy = newEnergy
         this.bodyCommand.radius = this.energy/5
         this.headCommand.x = this.energy/5
+        this.actionPointDistance = this.headCommand.x + 10 
     }
 
     p.eat = function() {
-        const mapPosition = getMapPosition(this.x, this.y)
+        const pos = this.getActionPointCoordinates()
+        const mapPosition = getMapPosition(pos.x, pos.y)
         const ammountEaten = eatFood(mapPosition.mapX, mapPosition.mapY, 20)
 
         if (ammountEaten > 0) {
