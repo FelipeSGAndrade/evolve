@@ -59,8 +59,17 @@
         return {
             mapX: mapX,
             mapY: mapY,
-            food: this.map[mapY][mapX]
+            food: this.map[mapY][mapX],
+            color: this.getTileColor(mapX, mapY)
         }
+    }
+
+    p.getTileColor = function(mapX, mapY) {
+        const tileStyle = this.tileCommands[mapY][mapX].style
+        const match = tileStyle.match(/(\d+),\s?(\d+),\s?(\d+)/)
+        if (match && match.length === 4) return match.slice(1, 4)
+        
+        return [0, 0, 0]
     }
 
     p.eatTileFood = function(x, y, ammount) {

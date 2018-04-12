@@ -30,7 +30,7 @@
     const p = createjs.extend(Creature, createjs.Container)
 
     p.setup = function(flatWeights) {
-        if(this.id === 1) this.color = "Red"
+        if(this.id === 1) this.color = "rgb(255,0,0)"
         const body = new createjs.Shape()
         this.bodyCommand = body.graphics
             .setStrokeStyle(2)
@@ -39,16 +39,12 @@
             .drawCircle(0, 0, this.energy)
             .command
 
-        const head = new createjs.Shape()
-        this.headCommand = head.graphics
-            .setStrokeStyle(2)
-            .beginStroke("Black")
+        this.headCommand = body.graphics
             .beginFill(this.color)
             .drawCircle(0, 0, 5)
             .command
 
         this.addChild(body)
-        this.addChild(head)
         this.cursor = "pointer"
 
         const log = false
@@ -110,13 +106,28 @@
         ]
     }
 
+    p.basicHitTest = function (x, y) {
+        const x1 = this.x - this.energy/5
+        const x2 = this.x + this.energy/5
+        const y1 = this.y - this.energy/5
+        const y2 = this.y + this.energy/5
+        return (x > x1 && x < x2) && (y > y1 && y < y2)
+    }
+
+    p.getColor = function() {
+        const match = this.color.match(/(\d+),\s?(\d+),\s?(\d+)/)
+        if (match && match.length === 4) return match.slice(1, 4)
+        
+        return [0, 0, 0]
+    }
+
     p.getVision = function() {
         const pos = this.getActionPointCoordinates()
-        const colors = getRGBA(pos.x, pos.y)
-        if(this.id === 1) {
-            const objects = stage.getObjectsUnderPoint(pos.x, pos.y)
-            console.log(objects)
-        }
+        let colors = [0, 0, 0]
+
+        const creature = creatureHitTest(this.id, pos.x, pos.y)
+        if(creature) colors = creature.getColor()
+        else colors = getMapPosition(pos.x, pos.y).color
 
         return {
             r: colors[0],
