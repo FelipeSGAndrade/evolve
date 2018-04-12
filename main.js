@@ -8,6 +8,9 @@ let baseFPS = 20
 let screenMargin = 20
 let margin = 10
 
+let mapTilesWidth = 50
+let mapTilesHeight = 20
+
 let creatureList = []
 
 let geneticManager
@@ -18,8 +21,8 @@ function initialize() {
     stage.enableMouseOver()
     stage.canvas.width = window.innerWidth - screenMargin
     stage.canvas.height = window.innerHeight - screenMargin
-    stage.width = 1000
-    stage.height = 1000
+    stage.width = 1500
+    stage.height = 800
 
     context2D = stage.canvas.getContext('2d')
 
@@ -36,8 +39,8 @@ function initialize() {
         .command
     
     const mapOptions = {
-        mapWidth: 20,
-        mapHeight: 20,
+        mapWidth: mapTilesWidth,
+        mapHeight: mapTilesHeight,
         regionWidth: gameRegion.width,
         regionHeight: gameRegion.height
     }
@@ -65,7 +68,7 @@ function initialize() {
         map.dragLastY = event.stageY
     })
 
-    generateCreatures(gameRegion, 100)
+    generateCreatures(50)
 
     gameRegion.addChild(hitTest)
 
@@ -77,13 +80,13 @@ function handleUpdate(event) {
     stage.update(event)
 }
 
-function generateCreatures(parent, qtd) {
+function generateCreatures(qtd) {
     for(let i = 0; i < qtd; i++) {
         const color = colors[MathHelper.randomInt(0, colors.length)]
-        const x = MathHelper.randomIntInclusive(0, parent.width - margin)
-        const y = MathHelper.randomIntInclusive(0, parent.height - margin)
+        const x = MathHelper.randomIntInclusive(0, gameRegion.width - margin)
+        const y = MathHelper.randomIntInclusive(0, gameRegion.height - margin)
         const creature = new Creature({color, x, y})
-        parent.addChild(creature)
+        gameRegion.addChild(creature)
         creatureList.push(creature)
     }
 }
@@ -113,6 +116,28 @@ function creatureHitTest(id, x, y) {
     }
 
     return null
+}
+
+function reproduce(creature1, creature2, energy) {
+    const childGenes = Genetics.reproduce(creature1.getGenes(), creature2.getGenes())
+
+    const color = creature1.color
+    const x = (creature1.x + creature2.x) / 2
+    const y = (creature1.y + creature2.y) / 2
+    const creature = new Creature({color, x, y, energy, flatWeigths: childGenes})
+    gameRegion.addChild(creature)
+    creatureList.push(creature)
+}
+
+function divide(creature1, energy) {
+    const genes = creature1.getGenes()
+
+    const color = creature1.color
+    const x = creature1.x
+    const y = creature1.y
+    const creature = new Creature({color, x, y, energy, flatWeigths: genes})
+    gameRegion.addChild(creature)
+    creatureList.push(creature)
 }
 
 const colors = [

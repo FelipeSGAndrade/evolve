@@ -1,14 +1,26 @@
+'use strict';
+
 (function() {
 
-    const maxEnergy = 200
-    const minEnergy = 20
+    const maxEnergy = 400
+    const minEnergy = 1
     const turnVelocity = 20
     const maxVelocity = 10
     let uniqueId = 0
 
-    const energyPerSecond = 5
-    const energyToEat = 5
+    const maxRadius = 40
+    const minRadius = 4
+    const energyToRadius = 1/5
+
+    const energyPerSecond = 2
+    const energyToEat = 1
     const energyToMove = 1
+    const energyToBreed = maxEnergy/2
+
+    const ammountToEat = 2
+
+    const minEnergyToBreed = energyToBreed
+    const energyPassed = energyToBreed/2
 
     function Creature(options) {
         this.Container_constructor()
@@ -36,7 +48,7 @@
             .setStrokeStyle(2)
             .beginStroke("Black")
             .beginFill(this.color)
-            .drawCircle(0, 0, this.energy)
+            .drawCircle(0, 0, this.getRadius())
             .command
 
         this.headCommand = body.graphics
@@ -52,6 +64,14 @@
 
         this.on("click", this.handleClick)
         this.on("tick", this.tick)
+    }
+
+    p.getRadius = function() {
+        return MathHelper.clamp(this.energy * energyToRadius, minRadius, maxRadius)
+    }
+
+    p.getGenes = function() {
+        return this.neuralNetwork.getFlatWeights()
     }
 
     p.handleClick = function() {
@@ -82,6 +102,7 @@
         const inputs = this.getInputs()
         const outputs = this.neuralNetwork.processInputs(inputs)
         this.processOutput(outputs)
+        this.breed()
 
         if (!this.alive) this.die()
     }
@@ -107,10 +128,10 @@
     }
 
     p.basicHitTest = function (x, y) {
-        const x1 = this.x - this.energy/5
-        const x2 = this.x + this.energy/5
-        const y1 = this.y - this.energy/5
-        const y2 = this.y + this.energy/5
+        const x1 = this.x - this.getRadius()
+        const x2 = this.x + this.getRadius()
+        const y1 = this.y - this.getRadius()
+        const y2 = this.y + this.getRadius()
         return (x > x1 && x < x2) && (y > y1 && y < y2)
     }
 
@@ -124,12 +145,25 @@
     p.getVision = function() {
         const pos = this.getActionPointCoordinates()
         let colors = [0, 0, 0]
+        let type = null
+        let object = null
 
         const creature = creatureHitTest(this.id, pos.x, pos.y)
-        if(creature) colors = creature.getColor()
-        else colors = getMapPosition(pos.x, pos.y).color
+        if(creature) {
+            type = 'creature'
+            colors = creature.getColor()
+            object = creature
+        }
+        else {
+            const tileInfo = getMapPosition(pos.x, pos.y)
+            type = 'tile'
+            colors = tileInfo.color
+            object = tileInfo
+        }
 
         return {
+            type,
+            object,
             r: colors[0],
             g: colors[1],
             b: colors[2]
@@ -157,8 +191,8 @@
 
     p.setEnergy = function(newEnergy) {
         this.energy = newEnergy
-        this.bodyCommand.radius = this.energy/5
-        this.headCommand.x = this.energy/5
+        this.bodyCommand.radius = this.getRadius()
+        this.headCommand.x = this.getRadius()
         this.actionPointDistance = this.headCommand.x + 10 
     }
 
@@ -192,18 +226,19 @@
     }
 
     p.processOutput = function(outputs) {
-        if (outputs.length !== 6)
+        if (outputs.length !== 7)
             throw new Error('Invalid output length')
 
         const velocityMultiplier = outputs[5]
-        let validCommand = false
-        if (outputs[0] > 0.5) validCommand = this.turnRight()
-        if (outputs[1] > 0.5) validCommand = this.turnLeft()
-        if (outputs[2] > 0.5) validCommand = this.forward(velocityMultiplier)
-        if (outputs[3] > 0.5) validCommand = this.backward(velocityMultiplier)
-        if (outputs[4] > 0.5) validCommand = this.eat()
+        this.shouldBread = (outputs[6] > 0.5)
 
-        return validCommand
+        if (outputs[0] > 0.5) this.turnRight()
+        if (outputs[1] > 0.5) this.turnLeft()
+        if (outputs[2] > 0.5) this.forward(velocityMultiplier)
+        if (outputs[3] > 0.5) this.backward(velocityMultiplier)
+        if (outputs[4] > 0.5) this.eat()
+
+        return true
     }
 
     p.turnRight = function() {
@@ -242,6 +277,22 @@
         this.x = nextX
         this.y = nextY
         return true
+    }
+
+    p.breed = function() {
+        if(!this.shouldBread) return
+        this.shouldBread = false
+
+        if(this.energy < minEnergyToBreed) return
+        this.consumeEnergy(energyToBreed)
+
+        const vision = this.getVision()
+        if (vision.type !== 'creature') {
+            divide(this, energyPassed)
+        }
+        else {
+            reproduce(this, vision.object, energyPassed)
+        }
     }
 
     window.Creature = createjs.promote(Creature, "Container")
