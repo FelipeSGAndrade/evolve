@@ -12,15 +12,15 @@
     const minRadius = 4
     const energyToRadius = 1/5
 
-    const energyPerSecond = 2
-    const energyToEat = 1
+    const energyPerSecond = 5
     const energyToMove = 1
-    const energyToBreed = maxEnergy/2
-
-    const ammountToEat = 2
-
-    const minEnergyToBreed = energyToBreed
-    const energyPassed = energyToBreed/2
+    
+    const energyToEat = 1
+    const ammountToEat = 5
+    
+    const energyToBreed = 50
+    const minEnergyToBreed = energyToBreed * 2
+    const energyPassed = energyToBreed
 
     function Creature(options) {
         this.Container_constructor()
@@ -96,6 +96,8 @@
     }
 
     p.tick = function() {
+        if(!this.alive) return
+
         const value = energyPerSecond/baseFPS
         this.consumeEnergy(value)
 
@@ -199,7 +201,7 @@
     p.eat = function() {
         const pos = this.getActionPointCoordinates()
         const mapPosition = getMapPosition(pos.x, pos.y)
-        const ammountEaten = eatFood(mapPosition.mapX, mapPosition.mapY, 20)
+        const ammountEaten = eatFood(mapPosition.mapX, mapPosition.mapY, ammountToEat)
 
         if (ammountEaten > 0) {
             this.increaseEnergy(ammountEaten)

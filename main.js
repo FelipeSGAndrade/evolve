@@ -1,15 +1,23 @@
 'use strict'
 
-let stage
+const baseFPS = 60
+const updateRatio = 2
+let updateCount = updateRatio
+
+let gameStage
 let context2D
 let map
 let gameRegion
-let baseFPS = 20
+
 let screenMargin = 20
 let margin = 10
 
-let mapTilesWidth = 50
-let mapTilesHeight = 20
+const stageWidth = 1000
+const stageHeight = 800
+const mapTilesWidth = 50
+const mapTilesHeight = 20
+const gameRegionWidth = 1500
+const gameRegionHeight = 800
 
 let creatureList = []
 
@@ -17,19 +25,23 @@ let geneticManager
 let hitTest
 
 function initialize() {
-    stage = new createjs.Stage("gameCanvas")
-    stage.enableMouseOver()
-    stage.canvas.width = window.innerWidth - screenMargin
-    stage.canvas.height = window.innerHeight - screenMargin
-    stage.width = 1500
-    stage.height = 800
+    gameStage = new createjs.Stage("gameCanvas")
+    gameStage.enableMouseOver()
+    gameStage.canvas.width = window.innerWidth - screenMargin
+    gameStage.canvas.height = window.innerHeight - screenMargin
+    gameStage.width = stageWidth
+    gameStage.height = stageHeight
 
-    context2D = stage.canvas.getContext('2d')
+    context2D = gameStage.canvas.getContext('2d')
 
     gameRegion = new createjs.Container()
-    gameRegion.width = stage.width
-    gameRegion.height = stage.height
-    stage.addChild(gameRegion)
+    gameRegion.width = gameRegionWidth
+    gameRegion.height = gameRegionHeight
+    gameStage.addChild(gameRegion)
+
+    var maskShape = new createjs.Shape()
+    maskShape.graphics.drawRect(0, 0, gameStage.width, gameStage.height)
+    gameStage.mask = maskShape
 
     hitTest = new createjs.Shape()
     hitTest.graphics
@@ -54,10 +66,10 @@ function initialize() {
     })
 
     map.on("pressmove", function(event) {
-        let minX = - (gameRegion.width - stage.canvas.width)
+        let minX = gameStage.width - gameRegion.width
         if (minX > 0) minX = 0
         const maxX = 0
-        let minY = - (gameRegion.height - stage.canvas.height)
+        let minY = gameStage.height - gameRegion.height
         if (minY > 0) minY = 0
         const maxY = 0
 
@@ -77,7 +89,19 @@ function initialize() {
 }
 
 function handleUpdate(event) {
-    stage.update(event)
+    updateCount++
+
+    if (updateCount >= updateRatio) {
+        gameStage.update(event)
+        updateCount = 0
+    }
+    else
+        partialUpdate()
+}
+
+function partialUpdate() {
+    map.tick()
+    creatureList.forEach((creature) => creature.tick())
 }
 
 function generateCreatures(qtd) {
@@ -142,7 +166,7 @@ function divide(creature1, energy) {
 
 const colors = [
     "rgb(255, 255, 255)",
-    // "rgb(255, 0, 0)",
+    "rgb(255, 0, 0)",
     "rgb(0, 0, 255)",
     "rgb(0, 255, 0)",
     "rgb(124, 0, 124)",
