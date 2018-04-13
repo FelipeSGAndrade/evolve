@@ -11,12 +11,14 @@
     const maxRadius = 40
     const minRadius = 4
     const energyToRadius = 1/5
+    const creatureMargin = 10
 
-    const energyPerSecond = 5
+    const energyPerSecond = 2
     const energyToMove = 1
+    const energyToTurn = 0.5
     
     const energyToEat = 1
-    const ammountToEat = 5
+    const ammountToEat = 3
     
     const energyToBreed = 50
     const minEnergyToBreed = energyToBreed * 2
@@ -26,7 +28,6 @@
         this.Container_constructor()
 
         options = options || {}
-        this.color = options.color || "Black"
         this.energy = options.energy || 100
         this.x = options.x || 100
         this.y = options.y || 100
@@ -35,13 +36,33 @@
         this.alive = true
         this.velocity = 10
         this.actionPointDistance = 10
+        this.movementBlocked = 0
 
-        this.setup(options.flatWeights)
+        this.processGenes(options.genes)
+
+        this.on("added", this.setup)
     }
 
     const p = createjs.extend(Creature, createjs.Container)
 
-    p.setup = function(flatWeights) {
+    p.processGenes = function(genes) {
+
+        let colorArray = []
+        if (!genes || genes.length === 0)
+            colorArray = [MathHelper.randomIntInclusive(0, 255), MathHelper.randomIntInclusive(0, 255), MathHelper.randomIntInclusive(0, 255)]
+        else
+            colorArray = genes.splice(0,3)
+
+        this.color = `rgb(${colorArray[0]}, ${colorArray[1]}, ${colorArray[2]})`
+
+        if(!genes || genes.length === 0)
+            this.flatWeights = null
+        else
+            this.flatWeights = genes
+    }
+
+    p.setup = function() {
+
         if(this.id === 1) this.color = "rgb(255,0,0)"
         const body = new createjs.Shape()
         this.bodyCommand = body.graphics
@@ -60,7 +81,7 @@
         this.cursor = "pointer"
 
         const log = false
-        this.neuralNetwork = CreateNeuralNetwork({flatWeights, log})
+        this.neuralNetwork = CreateNeuralNetwork({flatWeights: this.flatWeights, log})
 
         this.on("click", this.handleClick)
         this.on("tick", this.tick)
@@ -71,7 +92,8 @@
     }
 
     p.getGenes = function() {
-        return this.neuralNetwork.getFlatWeights()
+        const colorArray = this.getColor()
+        return colorArray.concat(this.neuralNetwork.getFlatWeights())
     }
 
     p.handleClick = function() {
@@ -80,7 +102,7 @@
         const actionInfo = JSON.stringify(this.actionPointDistance)
         const globalActionInfo = JSON.stringify(globalActionPoint)
         const actionMapInfo = JSON.stringify(getMapPosition(globalActionPoint.x, globalActionPoint.y))
-        const vision = JSON.stringify(this.getVision())
+        const vision = this.getVision().type
 
         let consoleText = 'creatureId: ' + this.id
         consoleText += '\ncreature energy: ' + this.energy
@@ -100,6 +122,11 @@
 
         const value = energyPerSecond/baseFPS
         this.consumeEnergy(value)
+
+        this.maxMovementX = this.parent.width - this.getRadius() - creatureMargin
+        this.minMovementX = this.getRadius() + creatureMargin
+        this.maxMovementY = this.parent.height - this.getRadius() - creatureMargin
+        this.minMovementY = this.getRadius() + creatureMargin
 
         const inputs = this.getInputs()
         const outputs = this.neuralNetwork.processInputs(inputs)
@@ -123,6 +150,7 @@
         return [
             this.energy,
             this.rotation,
+            this.movementBlocked,
             vision.r,
             vision.g,
             vision.b
@@ -245,10 +273,12 @@
 
     p.turnRight = function() {
         this.rotation += turnVelocity
+        this.consumeEnergy(energyToTurn)
     }
 
     p.turnLeft = function() {
         this.rotation -= turnVelocity
+        this.consumeEnergy(energyToTurn)
     }
 
     p.forward = function(velocityMultiplier) {
@@ -267,8 +297,14 @@
         let nextPlayerX = this.x + vector.x * vel
         let nextPlayerY = this.y + vector.y * vel
 
-        nextPlayerX = MathHelper.clamp(nextPlayerX, 2, this.parent.width - 2)
-        nextPlayerY = MathHelper.clamp(nextPlayerY, 2, this.parent.height - 2)
+        if (nextPlayerX >= this.maxMovementX || nextPlayerX <= this.minMovementX
+            || nextPlayerY >= this.maxMovementY || nextPlayerY <= this.minMovementY) {
+
+            this.movementBlocked = 1
+            nextPlayerX = MathHelper.clamp(nextPlayerX, this.minMovementX, this.maxMovementX)
+            nextPlayerY = MathHelper.clamp(nextPlayerY, this.minMovementY, this.maxMovementY)
+        }
+        else this.movementBlocked = 0
 
         return this.move(nextPlayerX, nextPlayerY)
     }

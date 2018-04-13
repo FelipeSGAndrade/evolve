@@ -6,11 +6,12 @@ const Genetics = (function() {
         const children = bitSwapCrossover(parent1, parent2)
         const child = children[MathHelper.randomIntInclusive(0, 1)]
 
-        return randomMutation(child)
+        return randomIncrementMutation(child)
     }
 
     const divide = (parent) => {
-        return randomMutation(parent)
+        // return randomIncrementMutation(parent)
+        return parent
     }
 
     const blockSwapCrossover = (parent1, parent2) => {
@@ -75,20 +76,21 @@ const Genetics = (function() {
 
         let mutations = MathHelper.randomInt(0, 20)
 
-        if (mutations < 10) return child
+        if (mutations < 18) return child
 
-        mutations = 1
+        mutations = mutations - 10
 
         for (let i = 0; i < mutations; i++) {
             const gene = MathHelper.randomInt(0, child.length)
-            const value = MathHelper.random(-1, 1)
-            child[gene] = MathHelper.clamp(child[gene] + value, -1, 1)
+            const value = MathHelper.randomInclusive(-1, 1)
+            child[gene] = child[gene] + value
         }
 
         return child
     }
 
     return {
-        reproduce
+        reproduce,
+        divide
     }
 })()

@@ -4,16 +4,17 @@ const baseFPS = 60
 const updateRatio = 2
 let updateCount = updateRatio
 
-let gameStage
-let context2D
-let map
+let stage
+let gameView
+let menuView
 let gameRegion
+let map
 
 let screenMargin = 20
 let margin = 10
 
-const stageWidth = 1000
-const stageHeight = 800
+const menuViewWidth = 300
+
 const mapTilesWidth = 50
 const mapTilesHeight = 20
 const gameRegionWidth = 1500
@@ -25,23 +26,22 @@ let geneticManager
 let hitTest
 
 function initialize() {
-    gameStage = new createjs.Stage("gameCanvas")
-    gameStage.enableMouseOver()
-    gameStage.canvas.width = window.innerWidth - screenMargin
-    gameStage.canvas.height = window.innerHeight - screenMargin
-    gameStage.width = stageWidth
-    gameStage.height = stageHeight
 
-    context2D = gameStage.canvas.getContext('2d')
+    stage = new createjs.Stage("gameCanvas")
+    stage.enableMouseOver()
+
+    menuView = new createjs.Container()
+    stage.addChild(menuView)
+
+    gameView = new createjs.Container()
+    stage.addChild(gameView)
+
+    resize()
 
     gameRegion = new createjs.Container()
     gameRegion.width = gameRegionWidth
     gameRegion.height = gameRegionHeight
-    gameStage.addChild(gameRegion)
-
-    var maskShape = new createjs.Shape()
-    maskShape.graphics.drawRect(0, 0, gameStage.width, gameStage.height)
-    gameStage.mask = maskShape
+    gameView.addChild(gameRegion)
 
     hitTest = new createjs.Shape()
     hitTest.graphics
@@ -66,10 +66,10 @@ function initialize() {
     })
 
     map.on("pressmove", function(event) {
-        let minX = gameStage.width - gameRegion.width
+        let minX = gameView.width - gameRegion.width
         if (minX > 0) minX = 0
         const maxX = 0
-        let minY = gameStage.height - gameRegion.height
+        let minY = gameView.height - gameRegion.height
         if (minY > 0) minY = 0
         const maxY = 0
 
@@ -88,11 +88,28 @@ function initialize() {
     createjs.Ticker.on("tick", handleUpdate)
 }
 
+function resize() {
+    const canvas = stage.canvas
+    canvas.width = window.innerWidth - screenMargin
+    canvas.height = window.innerHeight - screenMargin
+
+    menuView.x = canvas.width - menuViewWidth
+    menuView.width = menuViewWidth
+    menuView.height = canvas.height
+
+    gameView.width = canvas.width - menuViewWidth
+    gameView.height = canvas.height
+
+    var maskShape = new createjs.Shape()
+    maskShape.graphics.drawRect(0, 0, gameView.width, gameView.height).command
+    gameView.mask = maskShape
+}
+
 function handleUpdate(event) {
     updateCount++
 
     if (updateCount >= updateRatio) {
-        gameStage.update(event)
+        stage.update(event)
         updateCount = 0
     }
     else
@@ -106,10 +123,9 @@ function partialUpdate() {
 
 function generateCreatures(qtd) {
     for(let i = 0; i < qtd; i++) {
-        const color = colors[MathHelper.randomInt(0, colors.length)]
         const x = MathHelper.randomIntInclusive(0, gameRegion.width - margin)
         const y = MathHelper.randomIntInclusive(0, gameRegion.height - margin)
-        const creature = new Creature({color, x, y})
+        const creature = new Creature({x, y})
         gameRegion.addChild(creature)
         creatureList.push(creature)
     }
@@ -123,10 +139,6 @@ function getMapPosition(x, y) {
 
 function eatFood(x, y, ammount) {
     return map.eatTileFood(x, y, ammount)
-}
-
-function getRGBA(x, y) {
-    return context2D.getImageData(x, y, 1, 1).data
 }
 
 function creatureHitTest(id, x, y) {
@@ -143,23 +155,21 @@ function creatureHitTest(id, x, y) {
 }
 
 function reproduce(creature1, creature2, energy) {
-    const childGenes = Genetics.reproduce(creature1.getGenes(), creature2.getGenes())
+    const genes = Genetics.reproduce(creature1.getGenes(), creature2.getGenes())
 
-    const color = creature1.color
     const x = (creature1.x + creature2.x) / 2
     const y = (creature1.y + creature2.y) / 2
-    const creature = new Creature({color, x, y, energy, flatWeigths: childGenes})
+    const creature = new Creature({x, y, energy, genes})
     gameRegion.addChild(creature)
     creatureList.push(creature)
 }
 
 function divide(creature1, energy) {
-    const genes = creature1.getGenes()
+    const genes = Genetics.divide(creature1.getGenes())
 
-    const color = creature1.color
     const x = creature1.x
     const y = creature1.y
-    const creature = new Creature({color, x, y, energy, flatWeigths: genes})
+    const creature = new Creature({x, y, energy, genes})
     gameRegion.addChild(creature)
     creatureList.push(creature)
 }
@@ -175,3 +185,4 @@ const colors = [
 ]
 
 window.onload = initialize
+window.addEventListener('resize', resize, false)
