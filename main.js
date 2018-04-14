@@ -1,7 +1,7 @@
 'use strict'
 
-const baseFPS = 60
-const updateRatio = 2
+let baseFPS = 60
+let updateRatio = 2
 let updateCount = updateRatio
 
 let stage
@@ -30,7 +30,7 @@ function initialize() {
     stage = new createjs.Stage("gameCanvas")
     stage.enableMouseOver()
 
-    menuView = new createjs.Container()
+    menuView = new Menu()
     stage.addChild(menuView)
 
     gameView = new createjs.Container()
@@ -49,7 +49,7 @@ function initialize() {
         .beginFill("Blue")
         .drawCircle(0, 0, 5)
         .command
-    
+
     const mapOptions = {
         mapWidth: mapTilesWidth,
         mapHeight: mapTilesHeight,
@@ -146,7 +146,7 @@ function creatureHitTest(id, x, y) {
     // hitTest.y = y
     for(let i = 0; i < creatureList.length; i++) {
         const creature = creatureList[i]
-        if (creature.id !== id && creature.basicHitTest(x, y)) { 
+        if (creature.id !== id && creature.basicHitTest(x, y)) {
             return creature
         }
     }
@@ -174,15 +174,18 @@ function divide(creature1, energy) {
     creatureList.push(creature)
 }
 
-const colors = [
-    "rgb(255, 255, 255)",
-    "rgb(255, 0, 0)",
-    "rgb(0, 0, 255)",
-    "rgb(0, 255, 0)",
-    "rgb(124, 0, 124)",
-    "rgb(255, 124, 255)",
-    "rgb(0, 0, 0)"
-]
+function fpsUp() {
+    baseFPS += 10
+    updateRatio = Math.floor(baseFPS/30)
+    createjs.Ticker.setFPS(baseFPS)
+}
+
+function fpsDown() {
+    if(baseFPS <= 10) return
+    baseFPS -= 10
+    updateRatio = Math.floor(baseFPS/30)
+    createjs.Ticker.setFPS(baseFPS)
+}
 
 window.onload = initialize
 window.addEventListener('resize', resize, false)

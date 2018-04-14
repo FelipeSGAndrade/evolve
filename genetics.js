@@ -10,8 +10,7 @@ const Genetics = (function() {
     }
 
     const divide = (parent) => {
-        // return randomIncrementMutation(parent)
-        return parent
+        return randomIncrementMutation(parent)
     }
 
     const blockSwapCrossover = (parent1, parent2) => {

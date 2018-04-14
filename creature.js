@@ -9,17 +9,17 @@
     let uniqueId = 0
 
     const maxRadius = 40
-    const minRadius = 4
+    const minRadius = 5
     const energyToRadius = 1/5
     const creatureMargin = 10
 
     const energyPerSecond = 2
-    const energyToMove = 1
+    const energyToMove = 0.1
     const energyToTurn = 0.5
-    
+
     const energyToEat = 1
     const ammountToEat = 3
-    
+
     const energyToBreed = 50
     const minEnergyToBreed = energyToBreed * 2
     const energyPassed = energyToBreed
@@ -168,7 +168,7 @@
     p.getColor = function() {
         const match = this.color.match(/(\d+),\s?(\d+),\s?(\d+)/)
         if (match && match.length === 4) return match.slice(1, 4)
-        
+
         return [0, 0, 0]
     }
 
@@ -223,7 +223,7 @@
         this.energy = newEnergy
         this.bodyCommand.radius = this.getRadius()
         this.headCommand.x = this.getRadius()
-        this.actionPointDistance = this.headCommand.x + 10 
+        this.actionPointDistance = this.headCommand.x + 10
     }
 
     p.eat = function() {
@@ -256,17 +256,18 @@
     }
 
     p.processOutput = function(outputs) {
-        if (outputs.length !== 7)
+        if (outputs.length !== 8)
             throw new Error('Invalid output length')
 
         const velocityMultiplier = outputs[5]
-        this.shouldBread = (outputs[6] > 0.5)
+        this.shouldBreed = (outputs[6] > 0.5)
+        this.willingToBreed = (outputs[7] > 0.5)
 
+        if (outputs[4] > 0.5) this.eat()
         if (outputs[0] > 0.5) this.turnRight()
         if (outputs[1] > 0.5) this.turnLeft()
         if (outputs[2] > 0.5) this.forward(velocityMultiplier)
         if (outputs[3] > 0.5) this.backward(velocityMultiplier)
-        if (outputs[4] > 0.5) this.eat()
 
         return true
     }
@@ -317,19 +318,32 @@
         return true
     }
 
-    p.breed = function() {
-        if(!this.shouldBread) return
-        this.shouldBread = false
+    p.canBreed = function() {
+      return this.energy >= minEnergyToBreed
+    }
 
-        if(this.energy < minEnergyToBreed) return
-        this.consumeEnergy(energyToBreed)
+    p.isWillingToBreed = function() {
+      return this.willingToBreed && this.energy >= minEnergyToBreed
+    }
+
+    p.breed = function() {
+        if(!this.shouldBreed) return
+        this.shouldBreed = false
+
+        if(!this.canBreed()) return
 
         const vision = this.getVision()
         if (vision.type !== 'creature') {
+            this.consumeEnergy(energyToBreed)
             divide(this, energyPassed)
         }
         else {
-            reproduce(this, vision.object, energyPassed)
+            const secondCreature = vision.object
+            if (secondCreature.isWillingToBreed()) {
+              secondCreature.consumeEnergy(energyToBreed/2)
+              this.consumeEnergy(energyToBreed/2)
+              reproduce(this, secondCreature, energyPassed)
+            }
         }
     }
 
