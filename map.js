@@ -68,7 +68,7 @@
         const tileStyle = this.tileCommands[mapY][mapX].style
         const match = tileStyle.match(/(\d+),\s?(\d+),\s?(\d+)/)
         if (match && match.length === 4) return match.slice(1, 4)
-        
+
         return [0, 0, 0]
     }
 
@@ -102,7 +102,7 @@
     }
 
     p.tick = function() {
-        const value = this.fertility/baseFPS
+        const value = this.fertility/60
         for (let i = 0; i < this.mapHeight; i++) {
             for (let j = 0; j < this.mapWidth; j++) {
                 this.increaseFood(j, i, value)

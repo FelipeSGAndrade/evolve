@@ -36,7 +36,6 @@
     const p = createjs.extend(Menu, createjs.Container)
 
     p.tick = function() {
-        const currentFPS = createjs.Ticker.getMeasuredFPS().toFixed(0)
         this.fpsInfo.text = 'FPS: ' + currentFPS + '/' + baseFPS + '/' + updateRatio
     }
 

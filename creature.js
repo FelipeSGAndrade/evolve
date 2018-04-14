@@ -120,7 +120,7 @@
     p.tick = function() {
         if(!this.alive) return
 
-        const value = energyPerSecond/baseFPS
+        const value = energyPerSecond/60
         this.consumeEnergy(value)
 
         this.maxMovementX = this.parent.width - this.getRadius() - creatureMargin

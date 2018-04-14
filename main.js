@@ -3,6 +3,7 @@
 let baseFPS = 60
 let updateRatio = 2
 let updateCount = updateRatio
+let currentFPS = baseFPS
 
 let stage
 let gameView
@@ -107,6 +108,7 @@ function resize() {
 
 function handleUpdate(event) {
     updateCount++
+    currentFPS = createjs.Ticker.getMeasuredFPS().toFixed(0)
 
     if (updateCount >= updateRatio) {
         stage.update(event)
