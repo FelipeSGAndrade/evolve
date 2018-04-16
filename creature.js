@@ -69,10 +69,13 @@
         if(this.id === 1) this.color = [255, 0, 0]
 
         const colorString = `rgb(${this.color[0]}, ${this.color[1]}, ${this.color[2]})`
+        const colorSum = this.color[0] + this.color[1] + this.color[2]
+        const strokeColor = colorSum > 50 ? 'Black' : 'White'
+
         const body = new createjs.Shape()
         this.bodyCommand = body.graphics
             .setStrokeStyle(2)
-            .beginStroke("Black")
+            .beginStroke(strokeColor)
             .beginFill(colorString)
             .drawCircle(0, 0, this.getRadius())
             .command

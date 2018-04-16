@@ -16,10 +16,10 @@ let margin = 10
 
 const menuViewWidth = 300
 
-const mapTilesWidth = 50
-const mapTilesHeight = 20
-const gameRegionWidth = 1500
-const gameRegionHeight = 800
+const mapTilesWidth = 100
+const mapTilesHeight = 100
+const gameRegionWidth = mapTilesWidth * 30
+const gameRegionHeight = mapTilesHeight * 30
 
 let creatureList = []
 let deadCreatureList = []
@@ -117,6 +117,9 @@ function handleUpdate(event) {
     }
     else
         partialUpdate()
+
+    if(creatureList.length < 10)
+      generateCreatures(1)
 }
 
 function partialUpdate() {

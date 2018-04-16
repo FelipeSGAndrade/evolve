@@ -9,6 +9,7 @@
         this.regionHeight = options.regionHeight || 100
         this.regionWidth = options.regionWidth || 100
         this.fertility = 1
+        this.updateCount = 0
 
         this.setup()
     }
