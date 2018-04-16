@@ -10,8 +10,6 @@
         this.regionWidth = options.regionWidth || 100
         this.fertility = 1
 
-        console.log(options)
-
         this.setup()
     }
 
@@ -73,7 +71,7 @@
     }
 
     p.eatTileFood = function(x, y, ammount) {
-        if(this.map[y][x] < 2) return 0
+        if(this.map[y][x] < 1) return 0
 
         let newFood = Math.floor(this.map[y][x] - ammount)
         let ammountEaten = ammount
@@ -88,6 +86,8 @@
     }
 
     p.increaseFood = function(x, y, ammount) {
+        if(this.map[y][x] >= 255) return
+
         let newFood = this.map[y][x] + ammount
         if(newFood > 255) {
             newFood = 255

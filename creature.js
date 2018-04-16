@@ -13,12 +13,12 @@
     const energyToRadius = 1/5
     const creatureMargin = 10
 
-    const energyPerSecond = 2
+    const energyToMaintain = 0.03
     const energyToMove = 0.1
     const energyToTurn = 0.5
 
-    const energyToEat = 1
-    const ammountToEat = 3
+    const energyToEat = 2
+    const ammountToEat = 4
 
     const energyToBreed = 50
     const minEnergyToBreed = energyToBreed * 2
@@ -27,6 +27,13 @@
     function Creature(options) {
         this.Container_constructor()
 
+        this.config(options)
+        this.on("added", this.setup)
+    }
+
+    const p = createjs.extend(Creature, createjs.Container)
+
+    p.config = function(options) {
         options = options || {}
         this.energy = options.energy || 100
         this.x = options.x || 100
@@ -39,21 +46,18 @@
         this.movementBlocked = 0
 
         this.processGenes(options.genes)
-
-        this.on("added", this.setup)
     }
-
-    const p = createjs.extend(Creature, createjs.Container)
 
     p.processGenes = function(genes) {
 
-        let colorArray = []
         if (!genes || genes.length === 0)
-            colorArray = [MathHelper.randomIntInclusive(0, 255), MathHelper.randomIntInclusive(0, 255), MathHelper.randomIntInclusive(0, 255)]
+            this.color = [
+              MathHelper.randomIntInclusive(0, 255),
+              MathHelper.randomIntInclusive(0, 255),
+              MathHelper.randomIntInclusive(0, 255)
+            ]
         else
-            colorArray = genes.splice(0,3)
-
-        this.color = `rgb(${colorArray[0]}, ${colorArray[1]}, ${colorArray[2]})`
+            this.color = genes.splice(0,3)
 
         if(!genes || genes.length === 0)
             this.flatWeights = null
@@ -62,13 +66,14 @@
     }
 
     p.setup = function() {
+        if(this.id === 1) this.color = [255, 0, 0]
 
-        if(this.id === 1) this.color = "rgb(255,0,0)"
+        const colorString = `rgb(${this.color[0]}, ${this.color[1]}, ${this.color[2]})`
         const body = new createjs.Shape()
         this.bodyCommand = body.graphics
             .setStrokeStyle(2)
             .beginStroke("Black")
-            .beginFill(this.color)
+            .beginFill(colorString)
             .drawCircle(0, 0, this.getRadius())
             .command
 
@@ -92,8 +97,7 @@
     }
 
     p.getGenes = function() {
-        const colorArray = this.getColor()
-        return colorArray.concat(this.neuralNetwork.getFlatWeights())
+        return this.color.concat(this.neuralNetwork.getFlatWeights())
     }
 
     p.handleClick = function() {
@@ -120,7 +124,7 @@
     p.tick = function() {
         if(!this.alive) return
 
-        const value = energyPerSecond/60
+        const value = energyToMaintain
         this.consumeEnergy(value)
 
         this.maxMovementX = this.parent.width - this.getRadius() - creatureMargin
@@ -165,13 +169,6 @@
         return (x > x1 && x < x2) && (y > y1 && y < y2)
     }
 
-    p.getColor = function() {
-        const match = this.color.match(/(\d+),\s?(\d+),\s?(\d+)/)
-        if (match && match.length === 4) return match.slice(1, 4)
-
-        return [0, 0, 0]
-    }
-
     p.getVision = function() {
         const pos = this.getActionPointCoordinates()
         let colors = [0, 0, 0]
@@ -181,7 +178,7 @@
         const creature = creatureHitTest(this.id, pos.x, pos.y)
         if(creature) {
             type = 'creature'
-            colors = creature.getColor()
+            colors = creature.color
             object = creature
         }
         else {
@@ -242,7 +239,7 @@
     }
 
     p.die = function() {
-        this.parent.removeChild(this)
+      removeCreature(this)
     }
 
     p.randomCommands = function(chances) {

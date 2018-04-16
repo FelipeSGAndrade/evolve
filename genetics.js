@@ -3,7 +3,7 @@
 const Genetics = (function() {
 
     const reproduce = (parent1, parent2) => {
-        const children = bitSwapCrossover(parent1, parent2)
+        const children = blockSwapCrossover(parent1, parent2, 2)
         const child = children[MathHelper.randomIntInclusive(0, 1)]
 
         return randomIncrementMutation(child)
@@ -13,7 +13,7 @@ const Genetics = (function() {
         return randomIncrementMutation(parent)
     }
 
-    const blockSwapCrossover = (parent1, parent2) => {
+    const halfSwapCrossover = (parent1, parent2) => {
 
         const minimumDivision = Math.floor(parent1.length / 4)
         const divisionPoint = MathHelper.randomInt(minimumDivision, parent1.length - minimumDivision)
@@ -26,6 +26,27 @@ const Genetics = (function() {
 
         const child1 = parent1Slice1.concat(parent2Slice2)
         const child2 = parent2Slice1.concat(parent1Slice2)
+
+        return [child1, child2]
+    }
+
+    const blockSwapCrossover = (parent1, parent2, blockMaxLength) => {
+        blockMaxLength = blockMaxLength || parent1.length/2
+
+        const blockLength = MathHelper.randomIntInclusive(1, blockMaxLength)
+        const division1 = MathHelper.randomInt(blockLength, parent1.length - blockLength)
+        const division2 = division1 + blockLength
+
+        const parent1Slice1 = parent1.slice(0, division1)
+        const parent1Slice2 = parent1.slice(division1, division2)
+        const parent1Slice3 = parent1.slice(division2)
+
+        const parent2Slice1 = parent2.slice(0, division1)
+        const parent2Slice2 = parent2.slice(division1, division2)
+        const parent2Slice3 = parent2.slice(division2)
+
+        const child1 = parent1Slice1.concat(parent2Slice2).concat(parent1Slice3)
+        const child2 = parent2Slice1.concat(parent1Slice2).concat(parent2Slice3)
 
         return [child1, child2]
     }
@@ -56,12 +77,12 @@ const Genetics = (function() {
     }
 
     const randomMutation = (child) => {
-
+        const noMutationChance = 17
         let mutations = MathHelper.randomInt(0, 20)
 
-        if (mutations < 18) return child
+        if (mutations <= noMutationChance) return child
 
-        mutations = mutations - 10
+        mutations = mutations - noMutationChance
 
         for (let i = 0; i < mutations; i++) {
             const gene = MathHelper.randomInt(0, child.length)
@@ -72,12 +93,12 @@ const Genetics = (function() {
     }
 
     const randomIncrementMutation = (child) => {
-
+        const noMutationChance = 17
         let mutations = MathHelper.randomInt(0, 20)
 
-        if (mutations < 18) return child
+        if (mutations <= noMutationChance) return child
 
-        mutations = mutations - 10
+        mutations = mutations - noMutationChance
 
         for (let i = 0; i < mutations; i++) {
             const gene = MathHelper.randomInt(0, child.length)

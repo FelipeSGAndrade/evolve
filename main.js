@@ -22,6 +22,7 @@ const gameRegionWidth = 1500
 const gameRegionHeight = 800
 
 let creatureList = []
+let deadCreatureList = []
 
 let geneticManager
 let hitTest
@@ -81,7 +82,7 @@ function initialize() {
         map.dragLastY = event.stageY
     })
 
-    generateCreatures(50)
+    generateCreatures(100)
 
     gameRegion.addChild(hitTest)
 
@@ -127,10 +128,22 @@ function generateCreatures(qtd) {
     for(let i = 0; i < qtd; i++) {
         const x = MathHelper.randomIntInclusive(0, gameRegion.width - margin)
         const y = MathHelper.randomIntInclusive(0, gameRegion.height - margin)
-        const creature = new Creature({x, y})
-        gameRegion.addChild(creature)
-        creatureList.push(creature)
+        hatchCreature({x, y})
     }
+}
+
+function hatchCreature(options) {
+    let creature
+    if(deadCreatureList.length > 0) {
+        creature = deadCreatureList.pop()
+        creature.config(options)
+    }
+    else {
+        creature = new Creature(options)
+    }
+
+    gameRegion.addChild(creature)
+    creatureList.push(creature)
 }
 
 function getMapPosition(x, y) {
@@ -144,8 +157,6 @@ function eatFood(x, y, ammount) {
 }
 
 function creatureHitTest(id, x, y) {
-    // hitTest.x = x
-    // hitTest.y = y
     for(let i = 0; i < creatureList.length; i++) {
         const creature = creatureList[i]
         if (creature.id !== id && creature.basicHitTest(x, y)) {
@@ -162,8 +173,7 @@ function reproduce(creature1, creature2, energy) {
     const x = (creature1.x + creature2.x) / 2
     const y = (creature1.y + creature2.y) / 2
     const creature = new Creature({x, y, energy, genes})
-    gameRegion.addChild(creature)
-    creatureList.push(creature)
+    hatchCreature({x, y, energy, genes})
 }
 
 function divide(creature1, energy) {
@@ -171,22 +181,38 @@ function divide(creature1, energy) {
 
     const x = creature1.x
     const y = creature1.y
-    const creature = new Creature({x, y, energy, genes})
-    gameRegion.addChild(creature)
-    creatureList.push(creature)
+    hatchCreature({x, y, energy, genes})
 }
 
 function fpsUp() {
-    baseFPS += 10
+    setFps(baseFPS + 10)
+}
+
+function fpsDown() {
+    setFps(baseFPS - 10)
+}
+
+function maxFps() {
+    setFps(600)
+}
+
+function minFps() {
+    setFps(10)
+}
+
+function setFps(n) {
+    if(n < 10) return
+    baseFPS = n
     updateRatio = Math.floor(baseFPS/30)
     createjs.Ticker.setFPS(baseFPS)
 }
 
-function fpsDown() {
-    if(baseFPS <= 10) return
-    baseFPS -= 10
-    updateRatio = Math.floor(baseFPS/30)
-    createjs.Ticker.setFPS(baseFPS)
+function removeCreature(creature) {
+    const index = creatureList.indexOf(creature)
+    creatureList.splice(index, 1)
+    deadCreatureList.push(creature)
+
+    gameRegion.removeChild(creature)
 }
 
 window.onload = initialize

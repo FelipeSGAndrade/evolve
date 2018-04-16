@@ -1,7 +1,7 @@
 (function() {
 
   const defaultColor = '#FFFFFF'
-  const defaultFont = '20px Arial'
+  const defaultFont = '10px Arial'
   const defaultFontColor = '#000'
 
   function Button({label, color, font, fontColor, onClick}) {
@@ -22,17 +22,17 @@
   	text.textBaseline = "top"
   	text.textAlign = "center"
 
-  	var width = text.getMeasuredWidth()+30
-  	var height = text.getMeasuredHeight()+20
-
-  	text.x = width/2
-  	text.y = 10
+  	var width = text.getMeasuredWidth()
+    if (width < 12) width = 12
+  	var height = text.getMeasuredHeight()
 
   	var background = new createjs.Shape()
   	background.graphics
       .beginStroke('#000')
       .beginFill(this.color)
-      .drawRoundRect(0,0,width,height,10)
+      .drawRoundRect(-width, 0, width*2, height, 10)
+
+    this.setBounds(-width, 0, width*2, height)
 
   	this.addChild(background, text)
   	this.on("click", this.handleClick)
@@ -41,8 +41,6 @@
   	this.cursor = "pointer"
 
   	this.mouseChildren = false
-
-  	this.offset = Math.random()*10
   }
 
   p.handleClick = function (event) {
