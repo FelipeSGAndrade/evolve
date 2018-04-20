@@ -41,6 +41,8 @@
                 tile.graphics
                     .drawRect(x, y, this.tileWidth, this.tileHeight)
 
+                fillCommand.lastUpdateCount = 0
+
                 this.addChild(tile)
             }
 
@@ -55,12 +57,25 @@
         const mapX = Math.floor(x / this.tileWidth)
         const mapY = Math.floor(y / this.tileHeight)
 
+        this.updateTileFood(mapX, mapY)
+
         return {
             mapX: mapX,
             mapY: mapY,
             food: this.map[mapY][mapX],
             color: this.getTileColor(mapX, mapY)
         }
+    }
+
+    p.updateTileFood = function(mapX, mapY) {
+        const tile = this.tileCommands[mapY][mapX]
+
+        const difference = this.updateCount - tile.lastUpdateCount
+        if(difference <= 0) return
+
+        const ammount = difference * (this.fertility/60)
+        this.increaseFood(mapX, mapY, ammount)
+        tile.lastUpdateCount = this.updateCount
     }
 
     p.getTileColor = function(mapX, mapY) {
@@ -103,12 +118,13 @@
     }
 
     p.tick = function() {
-        const value = this.fertility/60
-        for (let i = 0; i < this.mapHeight; i++) {
-            for (let j = 0; j < this.mapWidth; j++) {
-                this.increaseFood(j, i, value)
-            }
-        }
+        this.updateCount++
+    //     const value = this.fertility/60
+    //     for (let i = 0; i < this.mapHeight; i++) {
+    //         for (let j = 0; j < this.mapWidth; j++) {
+    //             this.increaseFood(j, i, value)
+    //         }
+    //     }
     }
 
     window.Map = createjs.promote(Map, "Container")
