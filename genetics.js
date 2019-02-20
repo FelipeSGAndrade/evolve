@@ -10,7 +10,10 @@ const Genetics = (function() {
     }
 
     const divide = (parent) => {
-        return randomIncrementMutation(parent)
+        console.log("pai: ", parent)
+        const child = randomIncrementMutation(parent)
+        console.log("filho: ", child)
+        return child
     }
 
     const halfSwapCrossover = (parent1, parent2) => {
@@ -47,6 +50,8 @@ const Genetics = (function() {
 
         const child1 = parent1Slice1.concat(parent2Slice2).concat(parent1Slice3)
         const child2 = parent2Slice1.concat(parent1Slice2).concat(parent2Slice3)
+
+        console.log(`division: ${division1}/${division2}`)
 
         return [child1, child2]
     }
@@ -102,7 +107,8 @@ const Genetics = (function() {
 
         for (let i = 0; i < mutations; i++) {
             const gene = MathHelper.randomInt(0, child.length)
-            const value = MathHelper.randomInclusive(-1, 1)
+            const value = MathHelper.randomInclusive(-0.5, 0.5)
+            console.log(`mutation: ${gene}/${value}`)
             child[gene] = child[gene] + value
         }
 

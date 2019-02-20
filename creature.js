@@ -13,7 +13,7 @@
     const energyToRadius = 1/5
     const creatureMargin = 10
 
-    const energyToMaintain = 0.03
+    const energyToMaintain = 0.1
     const energyToMove = 0.1
     const energyToTurn = 0.5
 
